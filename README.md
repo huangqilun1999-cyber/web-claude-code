@@ -196,9 +196,54 @@ Once connected, the Agent status will show as **Online** in the web dashboard.
 - Use the **Theme Toggle** in settings for dark/light mode
 - **Pin** important sessions for quick access
 
-## 🔧 Using Local Agent
+## 🔧 Connecting to Your Machine
 
-To run an Agent on your local machine:
+There are **two ways** to connect your local machine to Web Claude Code:
+
+### Option 1: Desktop Connector (Recommended for beginners)
+
+The **WCC Desktop Connector** is a cross-platform Electron app with a graphical interface.
+
+#### Download
+
+Pre-built binaries are available in `tools/desktop-connector/release/`:
+- **Windows**: `WCC Desktop Connector Setup 1.0.0.exe` (installer) or portable version
+- **macOS/Linux**: Build from source (see below)
+
+#### Usage
+
+1. Launch the Desktop Connector
+2. Enter your server URL (e.g., `http://localhost:3000`)
+3. Login with your Web Claude Code account
+4. Select an Agent from the list
+5. Click **Connect**
+
+The app will automatically:
+- Authenticate with the server
+- Establish WebSocket connection
+- Execute Claude Code commands locally
+- Stream results back to the web interface
+
+#### Build from Source
+
+```bash
+cd tools/desktop-connector
+
+# Install dependencies
+npm install
+
+# Development mode
+npm run dev
+
+# Build for your platform
+npm run package:win    # Windows
+npm run package:mac    # macOS
+npm run package:linux  # Linux
+```
+
+### Option 2: CLI Agent (For advanced users)
+
+The CLI Agent runs in terminal without a GUI.
 
 ```bash
 # Build Agent
@@ -212,6 +257,15 @@ pnpm start start
 ```
 
 Once connected, the Web dashboard will show the Agent as online.
+
+### Comparison
+
+| Feature | Desktop Connector | CLI Agent |
+|---------|------------------|-----------|
+| Interface | GUI (Electron) | Terminal |
+| Login | Email/Password | Secret Key |
+| Setup | One-click | Manual config |
+| Best for | Beginners | Servers/Automation |
 
 ## 📁 Project Structure
 
@@ -230,9 +284,16 @@ web-claude-code/
 │   │   └── src/
 │   │       ├── handlers/ # Message handlers
 │   │       └── services/ # Connection management
-│   └── agent/            # Local Agent
+│   └── agent/            # CLI Agent
 │       └── src/
 │           └── handlers/ # Feature handlers
+├── tools/
+│   └── desktop-connector/    # Electron Desktop App
+│       ├── src/
+│       │   ├── main/         # Main process
+│       │   ├── preload/      # Preload scripts
+│       │   └── renderer/     # UI (HTML/CSS/JS)
+│       └── release/          # Built executables
 ├── packages/
 │   ├── shared/           # Shared types & utilities
 │   └── plugin-sdk/       # Plugin development SDK
@@ -255,7 +316,8 @@ web-claude-code/
 | Cache | Redis 7 |
 | Authentication | NextAuth.js 4.24 |
 | Monorepo | Turbo 2.7, pnpm workspaces |
-| Agent | Node.js, Commander.js, node-pty |
+| CLI Agent | Node.js, Commander.js, node-pty |
+| Desktop Connector | Electron 27, electron-vite, TypeScript |
 
 ## ⚙️ Environment Variables
 

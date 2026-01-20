@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Prisma
+apps/web/prisma/*.db
+apps/web/prisma/*.db-journal
+
+# Turbo
+.turbo/
+
+# Misc
+*.local
+.cache/
+tmp/
+temp/
+
+# Docker
+docker-compose.override.yml
+
+# Windows reserved names
+nul
+NUL
+apps/web/nul
+
+# Large binary files
+tools/desktop-connector/release/*.exe
+tools/desktop-connector/release/*.blockmap
+tools/desktop-connector/release/win-unpacked/

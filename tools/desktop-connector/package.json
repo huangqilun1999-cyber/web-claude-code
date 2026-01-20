@@ -1,0 +1,64 @@
+{
+  "name": "wcc-desktop-connector",
+  "version": "1.0.0",
+  "description": "Web Claude Code 桌面连接器 - 独立客户端",
+  "main": "dist/main/index.js",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/run-electron.js dev",
+    "build": "electron-vite build",
+    "preview": "node scripts/run-electron.js preview",
+    "start": "node scripts/run-electron.js start",
+    "package": "electron-builder",
+    "package:win": "electron-builder --win",
+    "package:mac": "electron-builder --mac",
+    "package:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/ws": "^8.5.10",
+    "cross-env": "^10.1.0",
+    "electron": "27.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-vite": "^2.0.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.webclaudecode.desktop-connector",
+    "productName": "WCC Desktop Connector",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "resources/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "resources/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "resources/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "WCC Desktop Connector"
+    }
+  }
+}

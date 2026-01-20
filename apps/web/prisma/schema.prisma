@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String    @map("password_hash")
+  name            String?
+  avatar          String?
+  apiKeyEncrypted String?   @map("api_key_encrypted")
+  apiKeyIv        String?   @map("api_key_iv")
+  role            UserRole  @default(USER)
+  status          UserStatus @default(ACTIVE)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  lastLoginAt     DateTime? @map("last_login_at")
+
+  agents          Agent[]
+  sessions        Session[]
+  templates       Template[]  @relation("UserTemplates")
+  plugins         UserPlugin[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+}
+
+// Agent
+model Agent {
+  id               String      @id @default(cuid())
+  userId           String      @map("user_id")
+  name             String
+  description      String?
+  secretKey        String      @unique @map("secret_key")
+  type             AgentType   @default(LOCAL)
+  isOnline         Boolean     @default(false) @map("is_online")
+  lastSeenAt       DateTime?   @map("last_seen_at")
+  currentDirectory String?     @map("current_directory")
+  systemInfo       Json?       @map("system_info")
+  allowedPaths     String[]    @default([]) @map("allowed_paths")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions         Session[]
+
+  @@index([userId])
+  @@index([secretKey])
+  @@map("agents")
+}
+
+enum AgentType {
+  LOCAL
+  SERVER
+}
+
+// 会话
+model Session {
+  id               String        @id @default(cuid())
+  userId           String        @map("user_id")
+  agentId          String?       @map("agent_id")
+  name             String
+  workingDirectory String?       @map("working_directory")
+  claudeSessionId  String?       @map("claude_session_id")
+  status           SessionStatus @default(ACTIVE)
+  metadata         Json?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agent            Agent?        @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  messages         Message[]
+
+  @@index([userId])
+  @@index([agentId])
+  @@map("sessions")
+}
+
+enum SessionStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+// 消息
+model Message {
+  id          String      @id @default(cuid())
+  sessionId   String      @map("session_id")
+  role        MessageRole
+  content     String
+  contentType ContentType @default(TEXT) @map("content_type")
+  metadata    Json?
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  session     Session     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
+enum ContentType {
+  TEXT
+  CODE
+  IMAGE
+  FILE
+  ERROR
+}
+
+// 模板
+model Template {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  icon        String?
+  author      String?
+  authorId    String?        @map("author_id")
+  isOfficial  Boolean        @default(false) @map("is_official")
+  isPublic    Boolean        @default(true) @map("is_public")
+  config      Json
+  downloads   Int            @default(0)
+  stars       Int            @default(0)
+  version     String         @default("1.0.0")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  authorUser  User?          @relation("UserTemplates", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([isPublic])
+  @@map("templates")
+}
+
+// 插件
+model Plugin {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  displayName String        @map("display_name")
+  description String?
+  version     String
+  author      String
+  icon        String?
+  homepage    String?
+  repository  String?
+  isOfficial  Boolean       @default(false) @map("is_official")
+  isActive    Boolean       @default(true) @map("is_active")
+  config      Json?
+  permissions String[]      @default([])
+  downloads   Int           @default(0)
+  rating      Float         @default(0)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  userPlugins UserPlugin[]
+
+  @@map("plugins")
+}
+
+// 用户插件关联
+model UserPlugin {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  pluginId    String    @map("plugin_id")
+  isEnabled   Boolean   @default(true) @map("is_enabled")
+  settings    Json?
+  installedAt DateTime  @default(now()) @map("installed_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plugin      Plugin    @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pluginId])
+  @@map("user_plugins")
+}
+
+// 系统配置
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_config")
+}

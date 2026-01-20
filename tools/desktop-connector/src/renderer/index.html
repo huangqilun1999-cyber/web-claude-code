@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WCC Desktop Connector</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* 标题栏 */
+    .titlebar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 32px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0 8px;
+      -webkit-app-region: drag;
+    }
+
+    .titlebar-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #94a3b8;
+    }
+
+    .titlebar-buttons {
+      display: flex;
+      gap: 4px;
+      -webkit-app-region: no-drag;
+    }
+
+    .titlebar-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .titlebar-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .titlebar-btn.close:hover {
+      background: #ef4444;
+    }
+
+    /* 主容器 */
+    .container {
+      padding: 24px;
+      height: calc(100vh - 32px);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    /* Logo 区域 */
+    .logo-section {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 24px;
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
+    }
+
+    .app-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .app-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    /* 表单 */
+    .form {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #94a3b8;
+    }
+
+    .form-input, .form-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: #fff;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: #6366f1;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .form-input::placeholder {
+      color: #64748b;
+    }
+
+    .form-select {
+      cursor: pointer;
+    }
+
+    .form-select option {
+      background: #1a1a2e;
+      color: #fff;
+    }
+
+    /* 复选框 */
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #6366f1;
+    }
+
+    .checkbox-label {
+      font-size: 12px;
+      color: #94a3b8;
+      cursor: pointer;
+    }
+
+    /* 按钮 */
+    .btn {
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    /* 状态指示器 */
+    .status-bar {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.connected {
+      background: #22c55e;
+    }
+
+    .status-dot.connecting {
+      background: #f59e0b;
+    }
+
+    .status-dot.disconnected {
+      background: #64748b;
+    }
+
+    .status-dot.error {
+      background: #ef4444;
+    }
+
+    .status-text {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* 加载动画 */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 错误提示 */
+    .error-message {
+      color: #ef4444;
+      font-size: 11px;
+      padding: 8px 10px;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 6px;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    /* 成功提示 */
+    .success-message {
+      color: #22c55e;
+      font-size: 11px;
+      padding: 8px 10px;
+      background: rgba(34, 197, 94, 0.1);
+      border-radius: 6px;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    /* 提示文本 */
+    .hint {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    /* 隐藏元素 */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Agent 选择界面 */
+    .agent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .agent-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .agent-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .agent-item.selected {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: #6366f1;
+    }
+
+    .agent-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .agent-info {
+      flex: 1;
+    }
+
+    .agent-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .agent-desc {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .agent-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64748b;
+    }
+
+    .agent-status.online {
+      background: #22c55e;
+    }
+
+    /* 用户信息 */
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .user-email {
+      flex: 1;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .logout-btn {
+      padding: 4px 8px;
+      font-size: 11px;
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <!-- 标题栏 -->
+  <div class="titlebar">
+    <span class="titlebar-title">WCC Desktop Connector</span>
+    <div class="titlebar-buttons">
+      <button class="titlebar-btn" id="minimize-btn" title="最小化">
+        <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor">
+          <rect width="10" height="1"/>
+        </svg>
+      </button>
+      <button class="titlebar-btn close" id="close-btn" title="关闭">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="1" y1="1" x2="9" y2="9"/>
+          <line x1="9" y1="1" x2="1" y2="9"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 主容器 -->
+  <div class="container">
+    <!-- Logo -->
+    <div class="logo-section">
+      <div class="logo">🔗</div>
+      <div class="app-name">Web Claude Code</div>
+      <div class="app-desc">桌面连接器</div>
+    </div>
+
+    <!-- 登录表单 -->
+    <form class="form" id="login-form">
+      <div class="form-group">
+        <label class="form-label">服务器地址</label>
+        <input type="text" class="form-input" id="server-url"
+               placeholder="http://localhost:3000" required>
+        <span class="hint">Web UI 的 HTTP 地址，如 http://localhost:3000</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">邮箱</label>
+        <input type="email" class="form-input" id="email"
+               placeholder="your@email.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input type="password" class="form-input" id="password"
+               placeholder="输入密码" required>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" class="checkbox" id="remember">
+        <label class="checkbox-label" for="remember">记住登录信息</label>
+      </div>
+
+      <div id="error-container"></div>
+
+      <div style="flex: 1;"></div>
+
+      <button type="submit" class="btn btn-primary" id="login-btn">
+        <span id="login-btn-text">登录</span>
+        <div class="spinner hidden" id="login-spinner"></div>
+      </button>
+    </form>
+
+    <!-- Agent 选择界面 -->
+    <div class="form hidden" id="agent-form">
+      <div class="user-info" id="user-info">
+        <div class="user-avatar">👤</div>
+        <span class="user-email" id="user-email">user@example.com</span>
+        <button type="button" class="logout-btn" id="logout-btn">退出</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">选择要连接的 Agent</label>
+        <div class="agent-list" id="agent-list">
+          <!-- Agent 列表将动态生成 -->
+        </div>
+      </div>
+
+      <div id="agent-error-container"></div>
+
+      <div style="flex: 1;"></div>
+
+      <button type="button" class="btn btn-primary" id="connect-btn" disabled>
+        <span id="connect-btn-text">选择 Agent 后连接</span>
+        <div class="spinner hidden" id="connect-spinner"></div>
+      </button>
+    </div>
+
+    <!-- 已连接界面 -->
+    <div class="form hidden" id="connected-form">
+      <div class="user-info" id="connected-user-info">
+        <div class="user-avatar">👤</div>
+        <span class="user-email" id="connected-user-email">user@example.com</span>
+        <button type="button" class="logout-btn" id="connected-logout-btn">退出</button>
+      </div>
+
+      <div class="success-message">
+        <strong>已成功连接!</strong><br>
+        <span id="connected-agent-name">Agent 名称</span>
+      </div>
+
+      <div style="flex: 1;"></div>
+
+      <button type="button" class="btn btn-danger" id="disconnect-btn">
+        断开连接
+      </button>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="status-bar" id="status-bar">
+      <div class="status-dot disconnected" id="status-dot"></div>
+      <span class="status-text" id="status-text">未连接</span>
+    </div>
+  </div>
+
+  <script>
+    // 元素引用
+    const serverUrlInput = document.getElementById('server-url')
+    const emailInput = document.getElementById('email')
+    const passwordInput = document.getElementById('password')
+    const rememberCheckbox = document.getElementById('remember')
+    const loginForm = document.getElementById('login-form')
+    const agentForm = document.getElementById('agent-form')
+    const connectedForm = document.getElementById('connected-form')
+    const loginBtn = document.getElementById('login-btn')
+    const loginBtnText = document.getElementById('login-btn-text')
+    const loginSpinner = document.getElementById('login-spinner')
+    const connectBtn = document.getElementById('connect-btn')
+    const connectBtnText = document.getElementById('connect-btn-text')
+    const connectSpinner = document.getElementById('connect-spinner')
+    const disconnectBtn = document.getElementById('disconnect-btn')
+    const logoutBtn = document.getElementById('logout-btn')
+    const connectedLogoutBtn = document.getElementById('connected-logout-btn')
+    const errorContainer = document.getElementById('error-container')
+    const agentErrorContainer = document.getElementById('agent-error-container')
+    const agentList = document.getElementById('agent-list')
+    const statusDot = document.getElementById('status-dot')
+    const statusText = document.getElementById('status-text')
+    const userEmailSpan = document.getElementById('user-email')
+    const connectedUserEmailSpan = document.getElementById('connected-user-email')
+    const connectedAgentNameSpan = document.getElementById('connected-agent-name')
+
+    let selectedAgentId = null
+    let agents = []
+    let currentUser = null
+    let wsServerUrl = null
+
+    // 加载保存的配置
+    async function loadConfig() {
+      const config = await window.electronAPI.getConfig()
+      if (config.serverUrl) serverUrlInput.value = config.serverUrl
+      if (config.email) emailInput.value = config.email
+      if (config.password) passwordInput.value = config.password
+      rememberCheckbox.checked = config.rememberCredentials
+    }
+
+    // 保存配置
+    async function saveConfig() {
+      if (rememberCheckbox.checked) {
+        await window.electronAPI.saveConfig({
+          serverUrl: serverUrlInput.value,
+          email: emailInput.value,
+          password: passwordInput.value,
+          rememberCredentials: true,
+        })
+      } else {
+        await window.electronAPI.saveConfig({
+          serverUrl: '',
+          email: '',
+          password: '',
+          rememberCredentials: false,
+        })
+      }
+    }
+
+    // 更新状态
+    function updateStatus(status, text) {
+      statusDot.className = 'status-dot ' + status
+      statusText.textContent = text
+    }
+
+    // 显示错误
+    function showError(container, message) {
+      container.innerHTML = `<div class="error-message">${message}</div>`
+    }
+
+    // 清除错误
+    function clearError(container) {
+      container.innerHTML = ''
+    }
+
+    // 显示登录界面
+    function showLoginForm() {
+      loginForm.classList.remove('hidden')
+      agentForm.classList.add('hidden')
+      connectedForm.classList.add('hidden')
+    }
+
+    // 显示 Agent 选择界面
+    function showAgentForm() {
+      loginForm.classList.add('hidden')
+      agentForm.classList.remove('hidden')
+      connectedForm.classList.add('hidden')
+      userEmailSpan.textContent = currentUser?.email || ''
+    }
+
+    // 显示已连接界面
+    function showConnectedForm(agentName) {
+      loginForm.classList.add('hidden')
+      agentForm.classList.add('hidden')
+      connectedForm.classList.remove('hidden')
+      connectedUserEmailSpan.textContent = currentUser?.email || ''
+      connectedAgentNameSpan.textContent = agentName
+    }
+
+    // 渲染 Agent 列表
+    function renderAgentList() {
+      agentList.innerHTML = agents.map(agent => `
+        <div class="agent-item ${selectedAgentId === agent.id ? 'selected' : ''}"
+             data-id="${agent.id}" data-secret="${agent.secretKey}" data-name="${agent.name}">
+          <div class="agent-icon">🤖</div>
+          <div class="agent-info">
+            <div class="agent-name">${agent.name}</div>
+            <div class="agent-desc">${agent.description || '无描述'}</div>
+          </div>
+          <div class="agent-status ${agent.isOnline ? 'online' : ''}"></div>
+        </div>
+      `).join('')
+
+      // 添加点击事件
+      document.querySelectorAll('.agent-item').forEach(item => {
+        item.addEventListener('click', () => {
+          selectedAgentId = item.dataset.id
+          document.querySelectorAll('.agent-item').forEach(i => i.classList.remove('selected'))
+          item.classList.add('selected')
+          connectBtn.disabled = false
+          connectBtnText.textContent = `连接 ${item.dataset.name}`
+        })
+      })
+    }
+
+    // 处理登录
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      clearError(errorContainer)
+
+      let serverUrl = serverUrlInput.value.trim()
+      const email = emailInput.value.trim()
+      const password = passwordInput.value.trim()
+
+      if (!serverUrl || !email || !password) {
+        showError(errorContainer, '请填写所有字段')
+        return
+      }
+
+      // 处理 URL 格式 - 确保是 HTTP 地址
+      serverUrl = serverUrl.replace(/^ws:\/\//, 'http://').replace(/^wss:\/\//, 'https://')
+      if (!serverUrl.includes('://')) {
+        serverUrl = 'http://' + serverUrl
+      }
+      // 如果用户输入了 8080 端口（WS 端口），提示错误
+      if (serverUrl.includes(':8080')) {
+        showError(errorContainer, '请输入 Web UI 的 HTTP 地址（通常是 3000 端口），不是 WebSocket 端口（8080）')
+        return
+      }
+
+      loginBtn.disabled = true
+      loginBtnText.textContent = '登录中...'
+      loginSpinner.classList.remove('hidden')
+      updateStatus('connecting', '正在登录...')
+
+      try {
+        const result = await window.electronAPI.login({
+          serverUrl,
+          email,
+          password,
+        })
+
+        if (result.success) {
+          currentUser = { email }
+          agents = result.agents || []
+          wsServerUrl = result.wsServerUrl
+
+          await saveConfig()
+
+          if (agents.length === 0) {
+            showError(errorContainer, '没有可用的 Agent，请先在 Web UI 创建')
+            loginBtn.disabled = false
+            loginBtnText.textContent = '登录'
+            loginSpinner.classList.add('hidden')
+            updateStatus('error', '无可用 Agent')
+          } else {
+            showAgentForm()
+            renderAgentList()
+            updateStatus('disconnected', '已登录，请选择 Agent')
+          }
+        } else {
+          showError(errorContainer, result.error || '登录失败')
+          updateStatus('error', '登录失败')
+        }
+      } catch (error) {
+        showError(errorContainer, error.message || '登录出错')
+        updateStatus('error', '登录出错')
+      } finally {
+        loginBtn.disabled = false
+        loginBtnText.textContent = '登录'
+        loginSpinner.classList.add('hidden')
+      }
+    })
+
+    // 处理连接 Agent
+    connectBtn.addEventListener('click', async () => {
+      if (!selectedAgentId) return
+
+      clearError(agentErrorContainer)
+
+      const selectedItem = document.querySelector(`.agent-item[data-id="${selectedAgentId}"]`)
+      const secretKey = selectedItem?.dataset.secret
+      const agentName = selectedItem?.dataset.name
+
+      if (!secretKey) {
+        showError(agentErrorContainer, '无法获取 Agent 密钥')
+        return
+      }
+
+      connectBtn.disabled = true
+      connectBtnText.textContent = '连接中...'
+      connectSpinner.classList.remove('hidden')
+      updateStatus('connecting', '正在连接...')
+
+      try {
+        const result = await window.electronAPI.connectAgent({
+          wsServerUrl,
+          secretKey,
+          agentId: selectedAgentId,
+        })
+
+        if (!result.success) {
+          showError(agentErrorContainer, result.error || '连接失败')
+          updateStatus('error', '连接失败')
+          connectBtn.disabled = false
+          connectBtnText.textContent = `连接 ${agentName}`
+          connectSpinner.classList.add('hidden')
+        }
+        // 成功连接后会通过事件回调处理
+      } catch (error) {
+        showError(agentErrorContainer, error.message || '连接出错')
+        updateStatus('error', '连接出错')
+        connectBtn.disabled = false
+        connectBtnText.textContent = `连接 ${agentName}`
+        connectSpinner.classList.add('hidden')
+      }
+    })
+
+    // 处理断开连接
+    disconnectBtn.addEventListener('click', async () => {
+      await window.electronAPI.disconnect()
+      showAgentForm()
+      renderAgentList()
+      updateStatus('disconnected', '已断开')
+      selectedAgentId = null
+      connectBtn.disabled = true
+      connectBtnText.textContent = '选择 Agent 后连接'
+    })
+
+    // 处理退出登录
+    async function handleLogout() {
+      await window.electronAPI.disconnect()
+      currentUser = null
+      agents = []
+      selectedAgentId = null
+      wsServerUrl = null
+      showLoginForm()
+      updateStatus('disconnected', '未连接')
+    }
+
+    logoutBtn.addEventListener('click', handleLogout)
+    connectedLogoutBtn.addEventListener('click', handleLogout)
+
+    // 监听连接状态
+    window.electronAPI.onConnectionStatus((status) => {
+      if (status.status === 'connected') {
+        updateStatus('connecting', '已连接，等待认证...')
+      } else if (status.status === 'disconnected') {
+        if (currentUser) {
+          showAgentForm()
+          renderAgentList()
+        }
+        updateStatus('disconnected', '已断开')
+      } else if (status.status === 'error') {
+        showError(agentErrorContainer, status.error || '连接错误')
+        updateStatus('error', '连接错误')
+      }
+    })
+
+    // 监听认证结果
+    window.electronAPI.onAuthResult((result) => {
+      if (result.success) {
+        const selectedItem = document.querySelector(`.agent-item[data-id="${selectedAgentId}"]`)
+        const agentName = selectedItem?.dataset.name || 'Agent'
+        showConnectedForm(agentName)
+        updateStatus('connected', `已连接: ${agentName}`)
+      } else {
+        showError(agentErrorContainer, result.error || '认证失败')
+        updateStatus('error', '认证失败')
+        connectBtn.disabled = false
+        const selectedItem = document.querySelector(`.agent-item[data-id="${selectedAgentId}"]`)
+        connectBtnText.textContent = `连接 ${selectedItem?.dataset.name || 'Agent'}`
+        connectSpinner.classList.add('hidden')
+      }
+    })
+
+    // 窗口控制按钮
+    document.getElementById('minimize-btn').addEventListener('click', () => {
+      window.electronAPI.minimizeWindow()
+    })
+
+    document.getElementById('close-btn').addEventListener('click', () => {
+      window.electronAPI.closeWindow()
+    })
+
+    // 初始化
+    loadConfig()
+
+    // 检查当前状态
+    window.electronAPI.getStatus().then((status) => {
+      if (status.connected && status.authenticated) {
+        // 已经连接，需要恢复界面状态
+        // TODO: 需要后端支持返回当前用户和 Agent 信息
+      }
+    })
+  </script>
+</body>
+</html>

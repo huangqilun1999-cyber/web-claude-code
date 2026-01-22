@@ -64,3 +64,10 @@ apps/web/nul
 tools/desktop-connector/release/*.exe
 tools/desktop-connector/release/*.blockmap
 tools/desktop-connector/release/win-unpacked/
+
+# Sensitive deployment scripts (contain server credentials)
+*.py
+*creds*.json
+*_output.txt
+*_check.txt
+wcc_info.txt
